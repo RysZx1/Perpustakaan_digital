@@ -10,7 +10,7 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST,
         port: process.env.DB_PORT || 27576, // <--- Tambahin baris ini Lek!
-        dialect: process.env.DB_DIALECT,
+        dialect: 'mysql',
         logging: false,
         dialectOptions: {
             ssl: {
