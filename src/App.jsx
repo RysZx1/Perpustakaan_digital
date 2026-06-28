@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom"
+import Lenis from "lenis"
 import Navbar from "./components/layout/Navbar"
 import LandingPage from "./pages/LandingPage"
 import DashboardPage from "./pages/DashboardPage"
 import AuthModal from "./components/AuthModal"
+import { Toaster } from "./components/ui/sonner"
+import { toast } from "sonner"
 
 const BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "/api" : "http://localhost:5000/api")
 
@@ -13,12 +16,12 @@ function AppContent() {
   const [borrows, setBorrows] = useState([])
   const [token, setToken] = useState(localStorage.getItem("token") || "")
   const [user, setUser] = useState({ nama: "", role: "" })
-  const [toast, setToast] = useState(null)
   const [authOpen, setAuthOpen] = useState(false)
 
   const showToast = (message, type = "info") => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
+    if (type === "success") toast.success(message)
+    else if (type === "error") toast.error(message)
+    else toast(message)
   }
 
   const logout = useCallback(() => {
@@ -59,6 +62,29 @@ function AppContent() {
       setBorrows(result.data || result || [])
     } catch {
       showToast("Gagal memuat riwayat pinjaman", "error")
+    }
+  }, [])
+
+  // Initialize Lenis smooth scroll
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      touchMultiplier: 2,
+    })
+
+    function raf(time) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+
+    requestAnimationFrame(raf)
+
+    return () => {
+      lenis.destroy()
     }
   }, [])
 
@@ -140,6 +166,52 @@ function AppContent() {
     }
   }
 
+  const handleEditBook = async (bookId, bookData) => {
+    try {
+      const res = await fetch(`${BASE_URL}/books/${bookId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          judul: bookData.judul,
+          penulis: bookData.penulis,
+          penerbit: bookData.penerbit,
+          tahun_terbit: parseInt(bookData.tahun),
+          stok: parseInt(bookData.stok),
+        }),
+      })
+      if (res.ok) {
+        showToast("Buku berhasil diperbarui!", "success")
+        loadBooks()
+      } else {
+        const errData = await res.json()
+        showToast(errData.message || "Gagal memperbarui buku", "error")
+      }
+    } catch {
+      showToast("Gagal memperbarui buku", "error")
+    }
+  }
+
+  const handleDeleteBook = async (bookId) => {
+    try {
+      const res = await fetch(`${BASE_URL}/books/${bookId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        showToast("Buku berhasil dihapus!", "success")
+        loadBooks()
+      } else {
+        const errData = await res.json()
+        showToast(errData.message || "Gagal menghapus buku", "error")
+      }
+    } catch {
+      showToast("Gagal menghapus buku", "error")
+    }
+  }
+
   const kembalikanBuku = async (borrowId) => {
     try {
       const res = await fetch(`${BASE_URL}/borrows/${borrowId}/kembalikan`, {
@@ -196,7 +268,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Routes>
         <Route
           path="/"
@@ -229,6 +301,8 @@ function AppContent() {
               onPinjam={pinjamBuku}
               onReturn={kembalikanBuku}
               onAddBook={handleAddBook}
+              onEditBook={handleEditBook}
+              onDeleteBook={handleDeleteBook}
               onRefresh={loadBooks}
             />
           }
@@ -242,18 +316,7 @@ function AppContent() {
         onRegister={handleRegister}
       />
 
-      {toast && (
-        <div
-          className={`fixed bottom-4 right-4 z-50 rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-all animate-in slide-in-from-bottom-2 ${toast.type === "success"
-              ? "bg-green-600 text-white"
-              : toast.type === "error"
-                ? "bg-destructive text-destructive-foreground"
-                : "bg-primary text-primary-foreground"
-            }`}
-        >
-          {toast.message}
-        </div>
-      )}
+      <Toaster position="top-right" />
     </div>
   )
 }

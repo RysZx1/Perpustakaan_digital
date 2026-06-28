@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ScrollText, BookOpen, Undo2 } from "lucide-react"
+import { ScrollText, BookOpen, Undo2, CheckCircle2, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
@@ -28,111 +28,143 @@ export default function BorrowHistory({ borrows = [], onReturn }) {
     setSelectedBorrow(null)
   }
 
+  const formatDate = (dateStr) =>
+    dateStr
+      ? new Date(dateStr).toLocaleDateString("id-ID", { year: "numeric", month: "short", day: "numeric" })
+      : "-"
+
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <ScrollText className="h-5 w-5 text-amber-500" />
-            Riwayat Pinjaman Buku
+      <Card className="border-white/60 shadow-xl shadow-slate-200/40 bg-white/50 backdrop-blur-xl rounded-2xl overflow-hidden">
+        <CardHeader className="border-b border-white/50 bg-white/40 px-5 py-4">
+          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
+              <ScrollText className="h-4 w-4 text-amber-600" />
+            </div>
+            Riwayat Pinjaman
+            <div className="ml-auto flex items-center gap-2">
+              {activeBorrows.length > 0 && (
+                <Badge className="bg-amber-100 text-amber-700 border-0 text-xs font-semibold">
+                  {activeBorrows.length} Aktif
+                </Badge>
+              )}
+              {returnedBorrows.length > 0 && (
+                <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs font-semibold">
+                  {returnedBorrows.length} Kembali
+                </Badge>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {activeBorrows.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                Sedang Dipinjam ({activeBorrows.length})
-              </h4>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Buku</TableHead>
-                    <TableHead>Tanggal Pinjam</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeBorrows.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {item.Book?.judul || `Buku #${item.BookId}`}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(item.createdAt).toLocaleDateString("id-ID", {
-                          year: "numeric", month: "long", day: "numeric",
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="warning">Dipinjam</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleReturnClick(item)}
-                          className="h-8 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                        >
-                          <Undo2 className="h-3.5 w-3.5" />
-                          Kembalikan
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
 
-          {returnedBorrows.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Riwayat Pengembalian ({returnedBorrows.length})
-              </h4>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Buku</TableHead>
-                    <TableHead>Tanggal Pinjam</TableHead>
-                    <TableHead>Tanggal Kembali</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {returnedBorrows.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {item.Book?.judul || `Buku #${item.BookId}`}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(item.createdAt).toLocaleDateString("id-ID", {
-                          year: "numeric", month: "long", day: "numeric",
-                        })}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.tanggal_kembali
-                          ? new Date(item.tanggal_kembali).toLocaleDateString("id-ID", {
-                              year: "numeric", month: "long", day: "numeric",
-                            })
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="success">Dikembalikan</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+        <CardContent className="p-0">
+          {borrows.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 mb-4">
+                <BookOpen className="h-7 w-7 opacity-30" />
+              </div>
+              <p className="font-semibold text-foreground mb-1">Belum ada pinjaman</p>
+              <p className="text-sm">Pinjam buku dari katalog untuk memulai.</p>
             </div>
-          )}
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {/* Active borrows */}
+              {activeBorrows.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2.5 px-5 py-3 bg-amber-50/60">
+                    <Clock className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm font-semibold text-amber-800">
+                      Sedang Dipinjam ({activeBorrows.length})
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent border-slate-100">
+                          <TableHead className="text-xs font-semibold text-muted-foreground pl-5">Buku</TableHead>
+                          <TableHead className="text-xs font-semibold text-muted-foreground">Tanggal Pinjam</TableHead>
+                          <TableHead className="text-xs font-semibold text-muted-foreground">Status</TableHead>
+                          <TableHead className="text-xs font-semibold text-muted-foreground text-right pr-5">Aksi</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {activeBorrows.map((item) => (
+                          <TableRow key={item.id} className="hover:bg-slate-50/70 border-slate-100">
+                            <TableCell className="font-medium pl-5 text-sm">
+                              {item.Book?.judul || `Buku #${item.BookId}`}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm tabular">
+                              {formatDate(item.createdAt)}
+                            </TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                Dipinjam
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right pr-5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleReturnClick(item)}
+                                className="h-8 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
+                              >
+                                <Undo2 className="h-3.5 w-3.5 mr-1.5" />
+                                Kembalikan
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
 
-          {borrows.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-              <BookOpen className="h-10 w-10 mb-3 opacity-30" />
-              <p className="font-medium">Belum ada buku yang dipinjam</p>
-              <p className="text-sm">Silakan pinjam buku dari katalog di atas.</p>
+              {/* Returned */}
+              {returnedBorrows.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2.5 px-5 py-3 bg-emerald-50/60">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <span className="text-sm font-semibold text-emerald-800">
+                      Sudah Dikembalikan ({returnedBorrows.length})
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent border-slate-100">
+                          <TableHead className="text-xs font-semibold text-muted-foreground pl-5">Buku</TableHead>
+                          <TableHead className="text-xs font-semibold text-muted-foreground">Dipinjam</TableHead>
+                          <TableHead className="text-xs font-semibold text-muted-foreground">Dikembalikan</TableHead>
+                          <TableHead className="text-xs font-semibold text-muted-foreground">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {returnedBorrows.map((item) => (
+                          <TableRow key={item.id} className="hover:bg-slate-50/70 border-slate-100">
+                            <TableCell className="font-medium pl-5 text-sm">
+                              {item.Book?.judul || `Buku #${item.BookId}`}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm tabular">
+                              {formatDate(item.createdAt)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm tabular">
+                              {formatDate(item.tanggal_kembali)}
+                            </TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Dikembalikan
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

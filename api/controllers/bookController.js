@@ -27,4 +27,39 @@ const getAllBooks = async (req, res) => {
     }
 };
 
-module.exports = { createBook, getAllBooks };
+// 3. Edit Buku (Update)
+const updateBook = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { judul, penulis, penerbit, tahun_terbit, stok } = req.body;
+
+        const book = await Book.findByPk(id);
+        if (!book) {
+            return res.status(404).json({ message: "Buku tidak ditemukan!" });
+        }
+
+        await book.update({ judul, penulis, penerbit, tahun_terbit, stok });
+        res.status(200).json({ message: "Buku berhasil diperbarui!", data: book });
+    } catch (error) {
+        res.status(500).json({ message: "Error server!", error: error.message });
+    }
+};
+
+// 4. Hapus Buku (Delete)
+const deleteBook = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const book = await Book.findByPk(id);
+        if (!book) {
+            return res.status(404).json({ message: "Buku tidak ditemukan!" });
+        }
+
+        await book.destroy();
+        res.status(200).json({ message: "Buku berhasil dihapus!" });
+    } catch (error) {
+        res.status(500).json({ message: "Error server!", error: error.message });
+    }
+};
+
+module.exports = { createBook, getAllBooks, updateBook, deleteBook };

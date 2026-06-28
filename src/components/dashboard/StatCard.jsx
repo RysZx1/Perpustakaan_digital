@@ -1,23 +1,31 @@
-import { Card } from "../ui/card"
+import { TrendingUp } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 
-const gradients = {
-  blue: "from-blue-500 to-cyan-500",
-  violet: "from-violet-500 to-purple-600",
-  amber: "from-amber-500 to-orange-500",
-  emerald: "from-emerald-500 to-teal-500",
-  pink: "from-pink-500 to-rose-500",
+const colorMap = {
+  blue:    { icon: "bg-blue-100 text-blue-600",   val: "text-blue-700" },
+  emerald: { icon: "bg-emerald-100 text-emerald-600", val: "text-emerald-700" },
+  amber:   { icon: "bg-amber-100 text-amber-600", val: "text-amber-700" },
+  violet:  { icon: "bg-violet-100 text-violet-600",val: "text-violet-700" },
+  pink:    { icon: "bg-rose-100 text-rose-600",   val: "text-rose-700" },
 }
 
 export default function StatCard({ title, value, icon: Icon, color = "blue" }) {
+  const c = colorMap[color] || colorMap.blue
   return (
-    <Card className="overflow-hidden shadow-sm border-0">
-      <div className={`bg-gradient-to-r ${gradients[color]} px-5 py-4`}>
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-white/80">{title}</p>
-          <Icon className="h-5 w-5 text-white/60" />
+    <Card className="border-white/60 shadow-xl shadow-slate-200/40 bg-white/50 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-sm font-medium text-slate-500">{title}</CardTitle>
+        <div className={`p-2 rounded-xl ${c.icon}`}>
+          <Icon className="h-4 w-4" />
         </div>
-        <p className="text-3xl font-bold text-white mt-1">{value}</p>
-      </div>
+      </CardHeader>
+      <CardContent>
+        <div className={`text-2xl font-bold tabular-nums ${c.val}`}>{value}</div>
+        <p className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
+          <TrendingUp className="h-3 w-3 text-emerald-500" />
+          <span className="text-emerald-600 font-semibold">+12%</span> dari bulan lalu
+        </p>
+      </CardContent>
     </Card>
   )
 }

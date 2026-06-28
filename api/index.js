@@ -41,5 +41,12 @@ sequelize.authenticate().then(() => {
     console.error('Unable to connect to the database:', error);
 });
 
+// Start local server if run directly (not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+    });
+}
+
 // Export app untuk Vercel Serverless
 module.exports = app;

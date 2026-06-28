@@ -1,14 +1,30 @@
 import { useState } from "react"
-import { User as UserIcon, Building, BookOpen } from "lucide-react"
-import { Card, CardContent, CardFooter } from "./ui/card"
+import { User as UserIcon, Building, BookOpen, Calendar } from "lucide-react"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import ConfirmDialog from "./ui/confirm-dialog"
+
+// Fixed spine colors based on book id hash
+const spineColors = [
+  "bg-primary",
+  "bg-amber-500",
+  "bg-teal-600",
+  "bg-violet-600",
+  "bg-rose-500",
+  "bg-sky-600",
+  "bg-emerald-600",
+  "bg-orange-500",
+]
+
+function getSpineColor(id) {
+  return spineColors[(id || 0) % spineColors.length]
+}
 
 export default function BookCard({ book, onPinjam }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const isAvailable = book.stok > 0
+  const spineColor = getSpineColor(book.id)
 
   const handleConfirm = async () => {
     setLoading(true)
@@ -19,49 +35,57 @@ export default function BookCard({ book, onPinjam }) {
 
   return (
     <>
-      <Card className="flex flex-col overflow-hidden transition-all hover:shadow-md">
-        <CardContent className="flex-1 p-5">
-          <div className="flex items-start justify-between gap-2 mb-3">
-            <h3 className="font-semibold text-base leading-snug text-foreground line-clamp-2">
+      <div className="group flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden card-lift">
+        {/* Book spine accent bar */}
+        <div className={`h-1.5 w-full ${spineColor}`} />
+
+        <div className="flex-1 p-5">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h3 className="font-semibold text-base leading-snug text-foreground line-clamp-2 font-sans flex-1">
               {book.judul}
             </h3>
-            <Badge variant="outline" className="shrink-0">
+            <span className="shrink-0 text-xs text-muted-foreground border border-slate-200 rounded-md px-2 py-0.5 tabular font-sans">
               {book.tahun_terbit || book.tahun}
-            </Badge>
+            </span>
           </div>
-          <div className="space-y-2 text-sm text-muted-foreground">
+
+          {/* Meta */}
+          <div className="space-y-1.5 text-sm text-muted-foreground font-sans">
             <div className="flex items-center gap-2">
-              <UserIcon className="h-3.5 w-3.5 shrink-0" />
-              <span>
-                <span className="font-medium text-foreground">Penulis:</span>{" "}
-                {book.penulis}
-              </span>
+              <UserIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span className="truncate">{book.penulis}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Building className="h-3.5 w-3.5 shrink-0" />
-              <span>
-                <span className="font-medium text-foreground">Penerbit:</span>{" "}
-                {book.penerbit}
-              </span>
+              <Building className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span className="truncate">{book.penerbit}</span>
             </div>
           </div>
-        </CardContent>
-        <CardFooter className="border-t bg-muted/30 px-5 py-3">
-          <div className="flex w-full items-center justify-between">
-            <Badge variant={isAvailable ? "success" : "destructive"} className="text-xs">
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-5 py-3 bg-slate-50/70 border-t border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className={`inline-block h-2 w-2 rounded-full ${isAvailable ? "bg-emerald-500" : "bg-slate-300"}`} />
+            <span className={`text-xs font-semibold font-sans ${isAvailable ? "text-emerald-700" : "text-slate-400"}`}>
               {isAvailable ? `${book.stok} Tersedia` : "Habis"}
-            </Badge>
-            <Button
-              size="sm"
-              disabled={!isAvailable}
-              onClick={() => setConfirmOpen(true)}
-            >
-              <BookOpen className="h-4 w-4" />
-              {isAvailable ? "Pinjam" : "Habis"}
-            </Button>
+            </span>
           </div>
-        </CardFooter>
-      </Card>
+          <Button
+            size="sm"
+            disabled={!isAvailable}
+            onClick={() => setConfirmOpen(true)}
+            className={`h-8 text-xs font-semibold ${
+              isAvailable
+                ? "bg-primary hover:bg-primary/90 text-white shadow-sm"
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            }`}
+          >
+            <BookOpen className="h-3.5 w-3.5 mr-1.5" />
+            {isAvailable ? "Pinjam" : "Habis"}
+          </Button>
+        </div>
+      </div>
 
       <ConfirmDialog
         open={confirmOpen}
