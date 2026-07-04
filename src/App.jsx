@@ -37,7 +37,7 @@ function AppContent() {
       const base64Url = jwtToken.split(".")[1]
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
       const payload = JSON.parse(window.atob(base64))
-      
+
       if (payload.exp && payload.exp * 1000 < Date.now()) {
         logout()
         return
@@ -131,7 +131,7 @@ function AppContent() {
         localStorage.setItem("token", result.token)
         setToken(result.token)
         setAuthOpen(false)
-        showToast(`Selamat datang, ${result.user?.nama || "User"}!`, "success")
+        showToast(`Selamat datang, ${result.user?.nama || "Admin"}!`, "success")
         navigate("/dashboard")
       } else {
         showToast(result.message || "Login gagal!", "error")
