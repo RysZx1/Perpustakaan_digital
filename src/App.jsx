@@ -26,6 +26,7 @@ function AppContent() {
 
   const logout = useCallback(() => {
     localStorage.removeItem("token")
+    localStorage.removeItem("userName")
     setToken("")
     setUser({ nama: "", role: "" })
     setBorrows([])
@@ -43,7 +44,10 @@ function AppContent() {
         return
       }
 
-      setUser({ nama: payload.nama || "User", role: payload.role || "anggota" })
+      setUser({ 
+        nama: payload.nama || localStorage.getItem("userName") || "User", 
+        role: payload.role || "anggota" 
+      })
     } catch {
       logout()
     }
@@ -129,6 +133,9 @@ function AppContent() {
       const result = await res.json()
       if (res.ok) {
         localStorage.setItem("token", result.token)
+        if (result.user?.nama) {
+          localStorage.setItem("userName", result.user.nama)
+        }
         setToken(result.token)
         setAuthOpen(false)
         showToast(`Selamat datang, ${result.user?.nama || "Admin"}!`, "success")
