@@ -14,7 +14,7 @@ function AppContent() {
   const navigate = useNavigate()
   const [books, setBooks] = useState([])
   const [borrows, setBorrows] = useState([])
-  const [token, setToken] = useState(localStorage.getItem("token") || "")
+  const [token, setToken] = useState(sessionStorage.getItem("token") || "")
   const [user, setUser] = useState({ nama: "", role: "" })
   const [authOpen, setAuthOpen] = useState(false)
 
@@ -24,13 +24,15 @@ function AppContent() {
     else toast(message)
   }
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("userName")
+  const logout = useCallback((isForced = false) => {
+    sessionStorage.removeItem("token")
+    sessionStorage.removeItem("userName")
     setToken("")
     setUser({ nama: "", role: "" })
     setBorrows([])
-    showToast("Berhasil keluar", "info")
+    if (!isForced) {
+      showToast("Berhasil keluar", "info")
+    }
   }, [])
 
   const decodeAndSetUser = useCallback((jwtToken) => {
@@ -40,16 +42,18 @@ function AppContent() {
       const payload = JSON.parse(window.atob(base64))
 
       if (payload.exp && payload.exp * 1000 < Date.now()) {
-        logout()
-        return
+        logout(true)
+        return false
       }
 
       setUser({ 
-        nama: payload.nama || localStorage.getItem("userName") || "User", 
+        nama: payload.nama || sessionStorage.getItem("userName") || "User", 
         role: payload.role || "anggota" 
       })
+      return true
     } catch {
-      logout()
+      logout(true)
+      return false
     }
   }, [logout])
 
@@ -81,7 +85,7 @@ function AppContent() {
       } else {
         setBorrows([])
         if (res.status === 401 || res.status === 403) {
-          logout()
+          logout(true)
         }
       }
     } catch {
@@ -117,8 +121,10 @@ function AppContent() {
   useEffect(() => {
     loadBooks()
     if (token) {
-      decodeAndSetUser(token)
-      loadBorrowHistory(token)
+      const isValid = decodeAndSetUser(token)
+      if (isValid) {
+        loadBorrowHistory(token)
+      }
     }
   }, [token, loadBooks, decodeAndSetUser, loadBorrowHistory])
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -132,9 +138,9 @@ function AppContent() {
       })
       const result = await res.json()
       if (res.ok) {
-        localStorage.setItem("token", result.token)
+        sessionStorage.setItem("token", result.token)
         if (result.user?.nama) {
-          localStorage.setItem("userName", result.user.nama)
+          sessionStorage.setItem("userName", result.user.nama)
         }
         setToken(result.token)
         setAuthOpen(false)
