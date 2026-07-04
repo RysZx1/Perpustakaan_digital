@@ -37,6 +37,12 @@ function AppContent() {
       const base64Url = jwtToken.split(".")[1]
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
       const payload = JSON.parse(window.atob(base64))
+      
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        logout()
+        return
+      }
+
       setUser({ nama: payload.nama || "User", role: payload.role || "anggota" })
     } catch {
       logout()
@@ -47,8 +53,14 @@ function AppContent() {
     try {
       const res = await fetch(`${BASE_URL}/books`)
       const result = await res.json()
-      setBooks(result.data || result)
+      if (res.ok) {
+        const data = result.data || result
+        setBooks(Array.isArray(data) ? data : [])
+      } else {
+        setBooks([])
+      }
     } catch {
+      setBooks([])
       showToast("Gagal memuat data buku", "error")
     }
   }, [])
@@ -59,11 +71,20 @@ function AppContent() {
         headers: { Authorization: `Bearer ${jwtToken}` },
       })
       const result = await res.json()
-      setBorrows(result.data || result || [])
+      if (res.ok) {
+        const data = result.data || result
+        setBorrows(Array.isArray(data) ? data : [])
+      } else {
+        setBorrows([])
+        if (res.status === 401 || res.status === 403) {
+          logout()
+        }
+      }
     } catch {
+      setBorrows([])
       showToast("Gagal memuat riwayat pinjaman", "error")
     }
-  }, [])
+  }, [logout])
 
   // Initialize Lenis smooth scroll
   useEffect(() => {
@@ -160,6 +181,7 @@ function AppContent() {
       } else {
         const errData = await res.json()
         showToast(errData.message || "Gagal tambah buku", "error")
+        if (res.status === 401 || res.status === 403) logout()
       }
     } catch {
       showToast("Gagal menambahkan buku", "error")
@@ -188,6 +210,7 @@ function AppContent() {
       } else {
         const errData = await res.json()
         showToast(errData.message || "Gagal memperbarui buku", "error")
+        if (res.status === 401 || res.status === 403) logout()
       }
     } catch {
       showToast("Gagal memperbarui buku", "error")
@@ -206,6 +229,7 @@ function AppContent() {
       } else {
         const errData = await res.json()
         showToast(errData.message || "Gagal menghapus buku", "error")
+        if (res.status === 401 || res.status === 403) logout()
       }
     } catch {
       showToast("Gagal menghapus buku", "error")
@@ -225,6 +249,7 @@ function AppContent() {
       } else {
         const errData = await res.json()
         showToast(errData.message || "Gagal mengembalikan buku", "error")
+        if (res.status === 401 || res.status === 403) logout()
       }
     } catch {
       showToast("Gagal memproses pengembalian", "error")
@@ -253,6 +278,7 @@ function AppContent() {
       } else {
         const errData = await res.json()
         showToast(errData.message || "Gagal meminjam buku", "error")
+        if (res.status === 401 || res.status === 403) logout()
       }
     } catch {
       showToast("Gagal memproses peminjaman", "error")
@@ -280,8 +306,8 @@ function AppContent() {
                 onLoginClick={() => setAuthOpen(true)}
                 onLogout={logout}
               />
-              <LandingPage 
-                onGetStarted={handleGetStarted} 
+              <LandingPage
+                onGetStarted={handleGetStarted}
                 books={books}
                 onPinjam={pinjamBuku}
                 onRefresh={loadBooks}
