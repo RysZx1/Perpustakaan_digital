@@ -25,7 +25,7 @@ export default function Header({ token, user, onLoginClick, onLogout }) {
                 ) : (
                   <User className="h-3.5 w-3.5" />
                 )}
-                {user.role === "admin" ? "Admin" : "Anggota"}: {user.nama}
+                {user.role === "admin" ? "Admin" : "Anggota"}: {user.role === "admin" ? "Admin" : user.nama}
               </Badge>
               <Button variant="outline" size="sm" onClick={onLogout}>
                 <LogOut className="h-4 w-4" />

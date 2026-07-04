@@ -17,8 +17,9 @@ export default function Navbar({ token, user, onLoginClick, onLogout }) {
   const [scrolled, setScrolled] = useState(false)
   const navigate = useNavigate()
 
-  const initials = user.nama
-    ? user.nama.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+  const displayNama = user.role === "admin" ? "Admin" : user.nama
+  const initials = displayNama
+    ? displayNama.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U"
 
   useEffect(() => {
@@ -98,7 +99,7 @@ export default function Navbar({ token, user, onLoginClick, onLogout }) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden sm:block text-left">
-                    <p className="text-sm font-medium leading-tight">{user.nama}</p>
+                    <p className="text-sm font-medium leading-tight">{displayNama}</p>
                     <p className="text-[10px] text-muted-foreground leading-tight capitalize">{user.role}</p>
                   </div>
                 </button>
@@ -111,7 +112,7 @@ export default function Navbar({ token, user, onLoginClick, onLogout }) {
                     ) : (
                       <User className="h-3.5 w-3.5 text-primary" />
                     )}
-                    <span className="text-sm">{user.nama}</span>
+                    <span className="text-sm">{displayNama}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

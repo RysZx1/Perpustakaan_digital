@@ -34,8 +34,9 @@ export default function DashboardPage({
     judul: "", penulis: "", penerbit: "", tahun: "", stok: "",
   })
 
-  const initials = user.nama
-    ? user.nama.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+  const displayNama = user?.role === "admin" ? "Admin" : user?.nama
+  const initials = displayNama
+    ? displayNama.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U"
 
   const handleAddBook = useCallback(
@@ -90,7 +91,7 @@ export default function DashboardPage({
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-900 truncate">{user.nama}</p>
+          <p className="text-sm font-semibold text-slate-900 truncate">{displayNama}</p>
           <Badge
             variant="secondary"
             className="text-[10px] px-1.5 py-0 mt-0.5 capitalize h-4 bg-primary/10 text-primary border-0 font-medium hover:bg-primary/20"
@@ -204,7 +205,7 @@ export default function DashboardPage({
                 <CardContent className="p-6 sm:p-8 flex items-center justify-between relative z-10">
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                      Selamat datang kembali, <span className="text-primary">{user.nama?.split(" ")[0]}</span> 👋
+                      Selamat datang kembali, <span className="text-primary">{displayNama?.split(" ")[0]}</span> 👋
                     </h1>
                     <p className="text-slate-500 mt-2 font-medium">
                       {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
