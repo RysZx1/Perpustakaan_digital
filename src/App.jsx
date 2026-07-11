@@ -14,7 +14,7 @@ function AppContent() {
   const navigate = useNavigate()
   const [books, setBooks] = useState([])
   const [borrows, setBorrows] = useState([])
-  const [token, setToken] = useState(sessionStorage.getItem("token") || "")
+  const [token, setToken] = useState(localStorage.getItem("token") || "")
   const [user, setUser] = useState({ nama: "", role: "" })
   const [authOpen, setAuthOpen] = useState(false)
 
@@ -25,8 +25,8 @@ function AppContent() {
   }
 
   const logout = useCallback((isForced = false, isSessionExpired = false) => {
-    sessionStorage.removeItem("token")
-    sessionStorage.removeItem("userName")
+    localStorage.removeItem("token")
+    localStorage.removeItem("userName")
     setToken("")
     setUser({ nama: "", role: "" })
     setBorrows([])
@@ -50,7 +50,7 @@ function AppContent() {
       }
 
       setUser({
-        nama: payload.nama || sessionStorage.getItem("userName") || "User",
+        nama: payload.nama || localStorage.getItem("userName") || "User",
         role: payload.role || "anggota"
       })
       return true
@@ -189,9 +189,9 @@ function AppContent() {
       })
       const result = await res.json()
       if (res.ok) {
-        sessionStorage.setItem("token", result.token)
+        localStorage.setItem("token", result.token)
         if (result.user?.nama) {
-          sessionStorage.setItem("userName", result.user.nama)
+          localStorage.setItem("userName", result.user.nama)
         }
         setToken(result.token)
         setAuthOpen(false)
