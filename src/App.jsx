@@ -24,13 +24,15 @@ function AppContent() {
     else toast(message)
   }
 
-  const logout = useCallback((isForced = false) => {
+  const logout = useCallback((isForced = false, isSessionExpired = false) => {
     sessionStorage.removeItem("token")
     sessionStorage.removeItem("userName")
     setToken("")
     setUser({ nama: "", role: "" })
     setBorrows([])
-    if (!isForced) {
+    if (isSessionExpired) {
+      showToast("Sesi login Anda telah berakhir. Silakan login kembali.", "error")
+    } else if (!isForced) {
       showToast("Berhasil keluar", "info")
     }
   }, [])
@@ -42,20 +44,22 @@ function AppContent() {
       const payload = JSON.parse(window.atob(base64))
 
       if (payload.exp && payload.exp * 1000 < Date.now()) {
-        logout(true)
+        logout(true, true)
+        navigate("/")
         return false
       }
 
-      setUser({ 
-        nama: payload.nama || sessionStorage.getItem("userName") || "User", 
-        role: payload.role || "anggota" 
+      setUser({
+        nama: payload.nama || sessionStorage.getItem("userName") || "User",
+        role: payload.role || "anggota"
       })
       return true
     } catch {
-      logout(true)
+      logout(true, true)
+      navigate("/")
       return false
     }
-  }, [logout])
+  }, [logout, navigate])
 
   const loadBooks = useCallback(async () => {
     try {
@@ -85,14 +89,15 @@ function AppContent() {
       } else {
         setBorrows([])
         if (res.status === 401 || res.status === 403) {
-          logout(true)
+          logout(true, true)
+          navigate("/")
         }
       }
     } catch {
       setBorrows([])
       showToast("Gagal memuat riwayat pinjaman", "error")
     }
-  }, [logout])
+  }, [logout, navigate])
 
   // Initialize Lenis smooth scroll
   useEffect(() => {
@@ -116,6 +121,52 @@ function AppContent() {
       lenis.destroy()
     }
   }, [])
+
+  // Session expiration timer — schedules auto-logout when JWT expires
+  useEffect(() => {
+    if (!token) return
+
+    try {
+      const base64Url = token.split(".")[1]
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+      const payload = JSON.parse(window.atob(base64))
+
+      if (!payload.exp) return
+
+      const msUntilExpiry = payload.exp * 1000 - Date.now()
+
+      if (msUntilExpiry <= 0) {
+        // Already expired
+        logout(true, true)
+        navigate("/")
+        return
+      }
+
+      // Show a warning toast 5 minutes before expiry
+      const WARNING_MS = 5 * 60 * 1000
+      let warningTimer
+      if (msUntilExpiry > WARNING_MS) {
+        warningTimer = setTimeout(() => {
+          showToast("Sesi Anda akan berakhir dalam 5 menit. Silakan simpan pekerjaan Anda.", "info")
+        }, msUntilExpiry - WARNING_MS)
+      }
+
+      // Auto-logout when token expires
+      const expiryTimer = setTimeout(() => {
+        logout(true, true)
+        navigate("/")
+      }, msUntilExpiry)
+
+      return () => {
+        clearTimeout(expiryTimer)
+        if (warningTimer) clearTimeout(warningTimer)
+      }
+    } catch {
+      // Invalid token, force logout
+      logout(true, true)
+      navigate("/")
+    }
+  }, [token, logout, navigate])
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
