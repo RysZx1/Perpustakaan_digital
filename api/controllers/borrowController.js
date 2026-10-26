@@ -13,7 +13,7 @@ const pinjamBuku = async (req, res) => {
         }
 
         if (book.stok < 1) {
-            return res.status(400).json({ message: "Stok buku ini sudah habis!" });
+            return res.status(400).json({ message: "udah habis brokk" });
         }
 
         const existing = await Borrow.findOne({
